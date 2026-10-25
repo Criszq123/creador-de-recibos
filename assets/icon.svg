@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#659B34" />
+      <stop offset="100%" stop-color="#466d21" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Fondo redondeado -->
+  <rect width="512" height="512" rx="110" fill="url(#bg)" />
+
+  <!-- Hoja de recibo blanca con sombra -->
+  <g filter="url(#shadow)">
+    <path d="M 120 90 L 392 90 L 392 410 L 358 395 L 324 410 L 290 395 L 256 410 L 222 395 L 188 410 L 154 395 L 120 410 Z" fill="#ffffff" rx="8" />
+  </g>
+
+  <!-- Cabecera verde de la tabla de recibo -->
+  <rect x="150" y="140" width="212" height="34" rx="4" fill="#659B34" />
+  
+  <!-- Líneas del recibo -->
+  <rect x="150" y="195" width="40" height="12" rx="3" fill="#cbd5e1" />
+  <rect x="200" y="195" width="100" height="12" rx="3" fill="#94a3b8" />
+  <rect x="310" y="195" width="52" height="12" rx="3" fill="#64748b" />
+
+  <rect x="150" y="225" width="40" height="12" rx="3" fill="#cbd5e1" />
+  <rect x="200" y="225" width="100" height="12" rx="3" fill="#94a3b8" />
+  <rect x="310" y="225" width="52" height="12" rx="3" fill="#64748b" />
+
+  <rect x="150" y="255" width="40" height="12" rx="3" fill="#cbd5e1" />
+  <rect x="200" y="255" width="100" height="12" rx="3" fill="#94a3b8" />
+  <rect x="310" y="255" width="52" height="12" rx="3" fill="#64748b" />
+
+  <!-- Total resaltado en verde abajo -->
+  <rect x="220" y="315" width="142" height="28" rx="4" fill="#659B34" />
+  <text x="291" y="335" fill="#ffffff" font-family="Arial, sans-serif" font-weight="900" font-size="16" text-anchor="middle">$ TOTAL</text>
+</svg>

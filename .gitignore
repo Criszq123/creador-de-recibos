@@ -1,0 +1,19 @@
+# Dependencias y herramientas
+node_modules/
+.npm
+package-lock.json
+
+# Entorno de agentes y configuración local
+.agents/
+.claude/
+skills-lock.json
+.vscode/
+.idea/
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
