@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Creador de Recibos y Notas de Venta en PDF</title>
+  <meta name="description"
+    content="Generador offline de recibos y notas de compra en PDF con cálculo automático de totales y diseño profesional.">
+  <meta name="theme-color" content="#659B34">
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Tipografía Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+
+  <!-- Estilos de la aplicación y del recibo PDF -->
+  <link rel="stylesheet" href="css/receipt-print.css?v=4">
+  <link rel="stylesheet" href="css/app.css?v=4">
+</head>
+
+<body>
+
+  <!-- Encabezado Principal de la Aplicación -->
+  <header class="app-header no-print">
+    <div class="brand-section">
+      <img src="assets/icon.svg" alt="Logo" class="app-icon">
+      <div>
+        <h1 class="brand-title">Creador de Recibos</h1>
+        <p class="brand-subtitle">Modo 100% Offline • Exportación a PDF</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="btn btn-secondary btn-sm" id="btn-load-example" title="Cargar ejemplo de prueba">
+        📋 Cargar Ejemplo
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btn-reset" title="Limpiar y nuevo recibo">
+        ✨ Nuevo Recibo
+      </button>
+      <button type="button" class="btn btn-secondary btn-icon-only" id="btn-open-settings"
+        title="Personalizar datos y colores del negocio">
+        ⚙️
+      </button>
+      <button type="button" class="btn btn-primary" id="btn-download-pdf">
+        📥 Descargar PDF
+      </button>
+    </div>
+  </header>
+
+  <!-- Layout Principal (Formulario a la izquierda / Vista Previa a la derecha) -->
+  <main class="app-main-layout">
+
+    <!-- Panel Izquierdo: Formulario de Entrada de Datos -->
+    <aside class="app-sidebar no-print">
+      <div class="sidebar-content">
+
+        <!-- Tarjeta 1: Folio y Fecha -->
+        <section class="form-card">
+          <div class="form-card-header">
+            <h2 class="form-card-title">📌 Folio y Fecha</h2>
+          </div>
+          <div class="form-card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="input-folio" class="form-label">No. Folio</label>
+                <input type="text" id="input-folio" class="form-input" placeholder="0148" value="0148">
+              </div>
+              <div class="form-group">
+                <label for="input-date" class="form-label">Fecha</label>
+                <input type="date" id="input-date" class="form-input">
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tarjeta 2: Datos del Cliente -->
+        <section class="form-card">
+          <div class="form-card-header">
+            <h2 class="form-card-title">👤 Datos del Cliente</h2>
+          </div>
+          <div class="form-card-body">
+            <div class="form-group">
+              <label for="input-client-name" class="form-label">Nombre / Empresa</label>
+              <input type="text" id="input-client-name" class="form-input"
+                placeholder="Nombre del cliente o razón social" value="TRANSPORTES DEL GOLFO S.A.">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="input-client-address" class="form-label">Dirección / Ciudad</label>
+                <input type="text" id="input-client-address" class="form-input" placeholder="MINATITLAN, VER."
+                  value="MINATITLAN, VER.">
+              </div>
+              <div class="form-group">
+                <label for="input-client-phone" class="form-label">Teléfono</label>
+                <input type="tel" id="input-client-phone" class="form-input" placeholder="922 145 8890"
+                  value="922 145 8890">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="input-client-details" class="form-label">Vehículo / Notas Adicionales (Opcional)</label>
+              <input type="text" id="input-client-details" class="form-input"
+                placeholder="Ej: NISSAN TSURU 2015 - PLACAS YGC-123" value="NISSAN TSURU 2015 - BLANCO">
+            </div>
+          </div>
+        </section>
+
+        <!-- Tarjeta 3: Conceptos / Productos / Servicios -->
+        <section class="form-card">
+          <div class="form-card-header">
+            <h2 class="form-card-title">📦 Conceptos y Servicios</h2>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-add-item">
+              + Agregar Fila
+            </button>
+          </div>
+          <div class="form-card-body">
+            <div id="items-form-container" style="display:flex; flex-direction:column; gap:10px;">
+              <!-- Filas dinámicas generadas por JS -->
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm"
+              style="width:100%; border-style:dashed; margin-top:4px;" onclick="window.receiptApp.addItem()">
+              + Agregar Otro Concepto
+            </button>
+          </div>
+        </section>
+
+        <!-- Botones de Acción Rápida en Sidebar -->
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <button type="button" class="btn btn-primary btn-download-pdf-action" id="btn-download-pdf-sidebar"
+            style="padding:12px;">
+            📥 Descargar Recibo en PDF
+          </button>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <button type="button" class="btn btn-secondary" id="btn-print">
+              🖨️ Imprimir
+            </button>
+            <button type="button" class="btn btn-secondary" id="btn-share">
+              💬 Enviar WhatsApp
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- Panel Derecho: Vista Previa Real del Recibo (Idéntico a las imágenes) -->
+    <section class="receipt-preview-pane">
+
+      <div class="preview-toolbar no-print">
+        <span>📄 Vista Previa en Vivo (Formato PDF)</span>
+      </div>
+
+      <!-- Hoja de Recibo que se imprimirá / exportará a PDF -->
+      <article class="receipt-paper" id="receipt-paper-target">
+
+        <!-- Marca de agua de fondo (Palmera / Compresor / Clima) -->
+        <div class="receipt-watermark" id="receipt-watermark-bg">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+            <defs>
+              <linearGradient id="palmGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.9" />
+                <stop offset="100%" stop-color="#0284c7" stop-opacity="0.7" />
+              </linearGradient>
+              <linearGradient id="machGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#94a3b8" stop-opacity="0.8" />
+                <stop offset="100%" stop-color="#64748b" stop-opacity="0.6" />
+              </linearGradient>
+            </defs>
+            <g id="mecanica" fill="url(#machGrad)" stroke="#475569" stroke-width="2" opacity="0.65">
+              <rect x="50" y="160" width="160" height="200" rx="16" />
+              <rect x="70" y="140" width="120" height="25" rx="6" />
+              <circle cx="130" cy="220" r="32" fill="#cbd5e1" />
+              <circle cx="130" cy="220" r="16" fill="#64748b" />
+              <rect x="65" y="270" width="130" height="12" rx="3" fill="#cbd5e1" />
+              <rect x="65" y="295" width="130" height="12" rx="3" fill="#cbd5e1" />
+              <rect x="65" y="320" width="130" height="12" rx="3" fill="#cbd5e1" />
+              <circle cx="210" cy="220" r="28" fill="#94a3b8" />
+              <circle cx="210" cy="220" r="14" fill="#f8fafc" />
+              <path d="M 210 180 L 210 260 M 170 220 L 250 220 M 182 192 L 238 248 M 182 248 L 238 192" stroke="#475569"
+                stroke-width="4" />
+            </g>
+            <g id="palmera" fill="url(#palmGrad)" opacity="0.75">
+              <path d="M 330 380 Q 345 280 325 200 Q 338 280 345 380 Z" fill="#0284c7" />
+              <path d="M 325 200 Q 260 180 230 140 Q 280 160 325 200 Z" />
+              <path d="M 325 200 Q 230 190 200 170 Q 260 185 325 200 Z" />
+              <path d="M 325 200 Q 320 120 340 90 Q 345 140 325 200 Z" />
+              <path d="M 325 200 Q 380 130 420 120 Q 390 160 325 200 Z" />
+              <path d="M 325 200 Q 420 180 450 190 Q 395 200 325 200 Z" />
+              <path d="M 325 200 Q 400 230 430 270 Q 380 235 325 200 Z" />
+              <path d="M 325 200 Q 250 220 220 260 Q 275 225 325 200 Z" />
+            </g>
+            <g id="frio" fill="#0284c7" opacity="0.7">
+              <path d="M 280 120 L 280 140 M 270 130 L 290 130" stroke="#38bdf8" stroke-width="3"
+                stroke-linecap="round" />
+              <path d="M 170 110 L 170 130 M 160 120 L 180 120" stroke="#38bdf8" stroke-width="3"
+                stroke-linecap="round" />
+              <path d="M 390 290 L 390 310 M 380 300 L 400 300" stroke="#38bdf8" stroke-width="3"
+                stroke-linecap="round" />
+            </g>
+            <text x="250" y="445" text-anchor="middle" font-family="Arial Black, Impact, sans-serif" font-size="64"
+              font-weight="900" letter-spacing="6" fill="#38bdf8" opacity="0.35">
+              CLIMA
+            </text>
+          </svg>
+        </div>
+
+        <div class="receipt-content">
+
+          <!-- Encabezado del Recibo -->
+          <header class="receipt-header">
+            <div class="business-info">
+              <div class="business-logo-container">
+                <img id="preview-business-logo" class="business-logo" style="display:none;" alt="Logo Negocio">
+                <h2 class="business-name" id="preview-business-name">AUTO CLIMAS DEL SURESTE</h2>
+              </div>
+              <p class="business-slogan" id="preview-business-slogan">Mantenimiento y Reparación de Climas Automotrices
+              </p>
+              <p class="business-details" id="preview-business-address">Av. Justo Sierra #120, Col. Centro, Minatitlán,
+                Ver.</p>
+              <p class="business-details" id="preview-business-phone" style="font-weight:700;">TEL: 922 123 4567 / 922
+                987 6543</p>
+            </div>
+
+            <!-- Caja de Folio y Fecha -->
+            <div class="receipt-meta-box">
+              <div class="receipt-type-badge">NOTA DE VENTA</div>
+              <div class="receipt-meta-body">
+                <div class="meta-row">
+                  <span class="meta-label">FOLIO:</span>
+                  <span class="meta-value folio" id="preview-folio">0148</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">FECHA:</span>
+                  <span class="meta-value" id="preview-date">05/09/2026</span>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <!-- Tabla de Datos del Cliente (Como se ve en la Imagen 1) -->
+          <table class="customer-info-table">
+            <tbody>
+              <tr>
+                <td style="width: 15%;" class="cust-label">CLIENTE:</td>
+                <td style="width: 85%;" colspan="3" class="cust-val" id="preview-client-name">TRANSPORTES DEL GOLFO S.A.
+                </td>
+              </tr>
+              <tr>
+                <td style="width: 15%;" class="cust-label">DIRECCIÓN:</td>
+                <td style="width: 45%;" class="cust-val" id="preview-client-address">MINATITLAN, VER.</td>
+                <td style="width: 15%;" class="cust-label">TELÉFONO:</td>
+                <td style="width: 25%;" class="cust-val" id="preview-client-phone">922 145 8890</td>
+              </tr>
+              <tr id="preview-row-details">
+                <td class="cust-label">VEHÍCULO / NOTAS:</td>
+                <td colspan="3" class="cust-val" id="preview-client-details" style="font-size:11px;">NISSAN TSURU 2015 -
+                  BLANCO</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Tabla Principal de Conceptos (Con cabecera verde idéntica a la Imagen 1 y 2) -->
+          <table class="receipt-items-table">
+            <thead>
+              <tr>
+                <th class="col-cant">CANT.</th>
+                <th class="col-desc">DESCRIPCIÓN</th>
+                <th class="col-precio">PRECIO U.</th>
+                <th class="col-subtotal">SUBTOTAL</th>
+              </tr>
+            </thead>
+            <tbody id="preview-items-body">
+              <!-- Filas de conceptos inyectadas por JS -->
+            </tbody>
+          </table>
+
+          <!-- Sección Inferior: Cantidad en Letra, Observaciones y Firmas -->
+          <footer class="receipt-footer-section">
+
+            <!-- Cantidad en Letra -->
+            <div class="amount-words-box">
+              <span class="words-label">IMPORTE CON LETRA: </span>
+              <span class="words-val" id="preview-amount-words">( DOS MIL SETECIENTOS PESOS 00/100 M.N. )</span>
+            </div>
+
+            <!-- Términos y Condiciones / Garantía -->
+            <div class="receipt-notes-box">
+              <strong>CONDICIONES: </strong>
+              <span id="preview-terms">Garantía de 30 días sobre mano de obra y piezas instaladas. No aplica por mal uso
+                o alteración eléctrica.</span>
+            </div>
+
+            <!-- Líneas de Firmas -->
+            <div class="signatures-container">
+              <div class="signature-block">
+                <div class="signature-line"></div>
+                <div class="signature-title">FIRMA DEL CLIENTE</div>
+              </div>
+              <div class="signature-block">
+                <div class="signature-line"></div>
+                <div class="signature-title">RECIBIDO / AUTORIZADO</div>
+              </div>
+            </div>
+
+          </footer>
+
+        </div>
+      </article>
+
+    </section>
+
+  </main>
+
+  <!-- Barra de Navegación Móvil (Tabs) -->
+  <nav class="mobile-nav-bar no-print">
+    <button type="button" class="mobile-nav-btn active" id="tab-btn-edit">
+      <span>✏️</span>
+      <span>Editar Datos</span>
+    </button>
+    <button type="button" class="mobile-nav-btn" id="tab-btn-preview">
+      <span>📄</span>
+      <span>Ver Recibo / PDF</span>
+    </button>
+  </nav>
+
+  <!-- Modal de Configuración y Personalización del Negocio -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">⚙️ Personalizar Negocio y Diseño</h3>
+        <button type="button" class="modal-close" id="btn-close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+
+        <div class="form-group">
+          <label class="form-label">Nombre del Negocio / Taller</label>
+          <input type="text" id="modal-input-bname" class="form-input" placeholder="AUTO CLIMAS DEL SURESTE">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Lema / Giro Comercial</label>
+          <input type="text" id="modal-input-bslogan" class="form-input"
+            placeholder="Mantenimiento y Reparación de Climas Automotrices">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Dirección Fiscal / Ubicación</label>
+          <input type="text" id="modal-input-baddress" class="form-input"
+            placeholder="Av. Justo Sierra #120, Col. Centro, Minatitlán, Ver.">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Teléfonos de Contacto</label>
+          <input type="text" id="modal-input-bphone" class="form-input" placeholder="922 123 4567 / 922 987 6543">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Color de Cabecera de la Tabla</label>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <input type="color" id="modal-input-color" value="#659B34"
+              style="width:42px; height:36px; padding:0; border:none; cursor:pointer;">
+            <div class="color-swatches">
+              <button type="button" class="color-swatch active" style="background-color:#659B34;" data-color="#659B34"
+                title="Verde Taller Original"></button>
+              <button type="button" class="color-swatch" style="background-color:#2563eb;" data-color="#2563eb"
+                title="Azul Corporativo"></button>
+              <button type="button" class="color-swatch" style="background-color:#dc2626;" data-color="#dc2626"
+                title="Rojo Intenso"></button>
+              <button type="button" class="color-swatch" style="background-color:#1e293b;" data-color="#1e293b"
+                title="Negro Grafito"></button>
+              <button type="button" class="color-swatch" style="background-color:#0d9488;" data-color="#0d9488"
+                title="Verde Azulado"></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Subir Logo del Negocio (Opcional)</label>
+          <input type="file" id="modal-input-logo" class="form-input" accept="image/*">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Subir Imagen para Marca de Agua de Fondo (Opcional)</label>
+          <input type="file" id="modal-input-watermark" class="form-input" accept="image/*">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Opacidad de la Marca de Agua</label>
+          <input type="range" id="modal-input-opacity" min="0.05" max="0.5" step="0.01" value="0.18"
+            style="width:100%;">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Texto de Garantía / Condiciones</label>
+          <textarea id="modal-input-terms" class="form-textarea" rows="2"
+            placeholder="Garantía de 30 días..."></textarea>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btn-cancel-modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btn-save-settings">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Librerías de Terceros Locales -->
+  <script src="js/libs/html2canvas.min.js?v=5"></script>
+  <script src="js/libs/jspdf.umd.min.js?v=5"></script>
+
+  <!-- Módulos de Arquitectura Limpia -->
+  <script src="js/utils/helpers.js?v=5"></script>
+  <script src="js/number-to-words.js?v=5"></script>
+  <script src="js/models/receipt.js?v=5"></script>
+  <script src="js/services/storage-service.js?v=5"></script>
+  <script src="js/services/share-service.js?v=5"></script>
+  <script src="js/services/pdf-service.js?v=5"></script>
+  <script src="js/views/receipt-view.js?v=5"></script>
+  <script src="js/views/form-view.js?v=5"></script>
+  <script src="js/views/settings-modal-view.js?v=5"></script>
+  <script src="js/app.js?v=5"></script>
+
+</body>
+
+</html>
